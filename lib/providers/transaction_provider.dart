@@ -163,5 +163,17 @@ class TransactionProvider extends ChangeNotifier {
     _transactions.remove(transaction);
     notifyListeners();
   }
+
+  void updateTransaction(
+      TransactionModel oldTransaction,
+      TransactionModel updatedTransaction,
+      ) {
+    final index = _transactions.indexOf(oldTransaction);
+
+    if (index != -1) {
+      _transactions[index] = updatedTransaction;
+      notifyListeners();
+    }
+  }
 }
 

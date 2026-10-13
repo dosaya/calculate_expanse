@@ -2,9 +2,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../models/transaction_model.dart';
 import '../providers/transaction_provider.dart';
 import '../widgets/balance_card.dart';
 import '../widgets/transaction_tile.dart';
+import 'add_transaction_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -15,6 +17,54 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   String _selectedFilter = 'All';
+
+  // Ask for confirmation before deleting a transaction.
+  Future<void> _confirmDelete(
+      BuildContext context,
+      TransactionModel transaction,
+      ) async {
+    final shouldDelete = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Delete Transaction?'),
+          content: Text(
+            'Are you sure you want to delete "${transaction.title}"?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(dialogContext, false);
+              },
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(dialogContext, true);
+              },
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.red,
+              ),
+              child: const Text('Delete'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (shouldDelete == true && context.mounted) {
+      context
+          .read<TransactionProvider>()
+          .deleteTransaction(transaction);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Transaction deleted successfully'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -61,7 +111,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
               const SizedBox(height: 24),
 
-              // Balance summary
+              // Balance summary.
               BalanceCard(
                 balance: provider.balance,
                 income: provider.totalIncome,
@@ -70,7 +120,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
               const SizedBox(height: 28),
 
-              // Heading and filter dropdown
+              // Recent transactions heading and filter.
               Row(
                 children: [
                   const Expanded(
@@ -130,7 +180,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
               const SizedBox(height: 16),
 
-              // Filtered transaction list
+              // Filtered transaction list with delete support.
               if (filteredTransactions.isEmpty)
                 Padding(
                   padding: const EdgeInsets.symmetric(
@@ -138,7 +188,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                   child: Center(
                     child: Text(
-                      'No ${_selectedFilter.toLowerCase()} transactions found.',
+                      'No ${_selectedFilter.toLowerCase()} '
+                          'transactions found.',
                       textAlign: TextAlign.center,
                       style: const TextStyle(
                         color: Colors.grey,
@@ -153,8 +204,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   itemBuilder: (context, index) {
+                    final transaction = filteredTransactions[index];
+
                     return TransactionTile(
-                      transaction: filteredTransactions[index],
+                      transaction: transaction,
+                      onEdit: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => AddTransactionScreen(
+                              transactionToEdit: transaction,
+                            ),
+                          ),
+                        );
+                      },
+                      onDelete: () {
+                        _confirmDelete(context, transaction);
+                      },
                     );
                   },
                 ),
