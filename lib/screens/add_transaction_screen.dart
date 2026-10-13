@@ -7,7 +7,11 @@ import '../providers/transaction_provider.dart';
 import '../utils/app_constants.dart';
 
 class AddTransactionScreen extends StatefulWidget {
-  const AddTransactionScreen({super.key});
+  final TransactionModel? transactionToEdit;
+  const AddTransactionScreen({
+    super.key,
+    this.transactionToEdit
+  });
 
   @override
   State<AddTransactionScreen> createState() =>
@@ -16,11 +20,15 @@ class AddTransactionScreen extends StatefulWidget {
 
 class _AddTransactionScreenState extends State<AddTransactionScreen> {
   final _formKey = GlobalKey<FormState>();
+  //
+  // final TextEditingController _amountController = TextEditingController();
+  //
+  // final TextEditingController _noteController =
+  // TextEditingController();
 
-  final TextEditingController _amountController = TextEditingController();
-
-  final TextEditingController _noteController =
-  TextEditingController();
+  late final TextEditingController _titleController;
+  late final TextEditingController _amountController;
+  late final TextEditingController _noteController;
 
   String _type = 'Expense';
   String _category = 'Food';
@@ -48,7 +56,31 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+
+    final transaction = widget.transactionToEdit;
+
+    _titleController = TextEditingController(
+      text: transaction?.title ?? '',
+    );
+
+    _amountController = TextEditingController(
+      text: transaction?.amount.toString() ?? '',
+    );
+
+    _noteController = TextEditingController(
+      text: transaction?.note ?? '',
+    );
+
+    _type = transaction?.type ?? 'Expense';
+    _category = transaction?.category ?? 'Food';
+    _date = transaction?.date ?? DateTime.now();
+  }
+
+  @override
   void dispose() {
+    _titleController.dispose();
     _amountController.dispose();
     _noteController.dispose();
     super.dispose();
@@ -88,10 +120,19 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       note: note,
     );
 
-    // Save the transaction using Provider.
-    context
-        .read<TransactionProvider>()
-        .addTransaction(transaction);
+    final provider = context.read<TransactionProvider>();
+    final existingTransaction = widget.transactionToEdit;
+
+    if (existingTransaction == null) {
+      // Add a new transaction.
+      provider.addTransaction(transaction);
+    } else {
+      // Update the existing transaction.
+      provider.updateTransaction(
+        existingTransaction,
+        transaction,
+      );
+    }
 
     // Close this screen after saving.
     Navigator.pop(context);
@@ -105,9 +146,13 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       backgroundColor: AppConstants.backgroundColor,
 
       appBar: AppBar(
-        title: const Text(
-          'Add Transaction',
-          style: TextStyle(fontWeight: FontWeight.bold),
+        title: Text(
+          widget.transactionToEdit == null
+              ? 'Add Transaction'
+              : 'Edit Transaction',
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+          ),
         ),
         centerTitle: true,
         backgroundColor: Colors.white,
@@ -385,9 +430,11 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                         borderRadius: BorderRadius.circular(14),
                       ),
                     ),
-                    child: const Text(
-                      'Save Transaction',
-                      style: TextStyle(
+                    child: Text(
+                      widget.transactionToEdit == null
+                          ? 'Save Transaction'
+                          : 'Save Changes',
+                      style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                       ),

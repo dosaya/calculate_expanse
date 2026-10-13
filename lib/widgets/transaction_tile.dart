@@ -7,11 +7,16 @@ import '../utils/app_constants.dart';
 class TransactionTile extends StatelessWidget {
   final TransactionModel transaction;
   final VoidCallback? onTap;
+  final VoidCallback? onDelete;
+  final VoidCallback? onEdit;
+
 
   const TransactionTile({
     super.key,
     required this.transaction,
     this.onTap,
+    this.onDelete,
+    this.onEdit,
   });
 
   @override
@@ -37,13 +42,11 @@ class TransactionTile extends StatelessWidget {
         onTap: onTap,
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 14,
-          vertical: 8,
+          vertical: 6,
         ),
-
-        // Transaction icon
         leading: Container(
-          width: 48,
-          height: 48,
+          width: 46,
+          height: 46,
           decoration: BoxDecoration(
             color: transactionColor.withValues(alpha: 0.12),
             borderRadius: BorderRadius.circular(14),
@@ -53,8 +56,6 @@ class TransactionTile extends StatelessWidget {
             color: transactionColor,
           ),
         ),
-
-        // Transaction title and category
         title: Text(
           transaction.title,
           maxLines: 1,
@@ -64,7 +65,6 @@ class TransactionTile extends StatelessWidget {
             fontWeight: FontWeight.w600,
           ),
         ),
-
         subtitle: Padding(
           padding: const EdgeInsets.only(top: 5),
           child: Text(
@@ -77,15 +77,40 @@ class TransactionTile extends StatelessWidget {
             ),
           ),
         ),
-
-        // Transaction amount
-        trailing: Text(
-          '${isIncome ? '+' : '-'}₹${transaction.amount.toStringAsFixed(2)}',
-          style: TextStyle(
-            color: transactionColor,
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
-          ),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              '${isIncome ? '+' : '-'}₹${transaction.amount.toStringAsFixed(2)}',
+              style: TextStyle(
+                color: transactionColor,
+                fontSize: 13,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            if (onDelete != null) ...[
+              const SizedBox(width: 4),
+              IconButton(
+                tooltip: 'Delete transaction',
+                onPressed: onDelete,
+                icon: const Icon(
+                  Icons.delete_outline,
+                  color: Colors.red,
+                  size: 21,
+                ),
+              ),
+            ],
+            if (onEdit != null)
+              IconButton(
+                tooltip: 'Edit transaction',
+                onPressed: onEdit,
+                icon: const Icon(
+                  Icons.edit_outlined,
+                  color: Colors.blue,
+                  size: 21,
+                ),
+              ),
+          ],
         ),
       ),
     );

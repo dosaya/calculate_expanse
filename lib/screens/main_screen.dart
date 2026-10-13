@@ -67,7 +67,7 @@ class _MainScreenState extends State<MainScreen> {
           shape: const CircleBorder(),
           child: const Icon(Icons.add, size: 32)
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
 
       bottomNavigationBar: BottomAppBar(
           shape: const CircularNotchedRectangle(),
